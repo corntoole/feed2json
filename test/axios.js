@@ -5,13 +5,19 @@
 // npm
 const test = require('tape')
 const axios = require('axios')
+const nock = require('nock')
 
 // local
 const feed2json = require('../')
 
 // --------------------------------------------------------------------------------------------------------------------
 
-test('axios fetching an RSS file', (t) => {
+test('axios fetching an RSS file', t => {
+  nock('https://bulk.chilts.org')
+    .get('/feed2json/rss.xml')
+    .replyWithFile(200, __dirname + '/rss2-example.xml', {
+      'Content-Type': 'text/xml',
+    })
   t.plan(9)
 
   let url = 'https://bulk.chilts.org/feed2json/rss.xml'
@@ -23,13 +29,25 @@ test('axios fetching an RSS file', (t) => {
         t.ok(json, 'something appeared in the JSON')
         t.ok(typeof json === 'object', 'The JSON is an object as expected')
 
-        t.equal(json.version, "https://jsonfeed.org/version/1", 'JSONFeed version is correct')
-        t.equal(json.title, "Andrew Chilton", "Title is correct")
-        t.equal(json.home_page_url, "https://chilts.org", "Home Page URL is correct")
-        t.equal(json.description, "A blog about tech.", "Description is correct")
-        t.equal(json.author.name, "Andrew Chilton", "Author Name is correct")
+        t.equal(
+          json.version,
+          'https://jsonfeed.org/version/1',
+          'JSONFeed version is correct'
+        )
+        t.equal(json.title, 'Scripting News', 'Title is correct')
+        t.equal(
+          json.home_page_url,
+          'http://www.scripting.com/',
+          'Home Page URL is correct'
+        )
+        t.equal(
+          json.description,
+          'A weblog about scripting and stuff like that.',
+          'Description is correct'
+        )
+        t.equal(json.author.name, 'dave@userland.com', 'Author Name is correct')
 
-        t.equal(json.items.length, 2, "There are two items as expected.")
+        t.equal(json.items.length, 9, 'There are two items as expected.')
 
         t.end()
       })
@@ -37,14 +55,22 @@ test('axios fetching an RSS file', (t) => {
     .catch(err => {
       t.fail("Request shouldn't have failed")
     })
-  ;
 })
 
-test('axios streaming an RSS file', (t) => {
+test('axios streaming an RSS file', t => {
+  nock('https://bulk.chilts.org')
+    .get('/feed2json/rss.xml')
+    .replyWithFile(200, __dirname + '/rss2-example.xml', {
+      'Content-Type': 'text/xml',
+    })
   t.plan(9)
 
   let url = 'https://bulk.chilts.org/feed2json/rss.xml'
-  axios({ method : 'get', url : url, responseType : 'stream' })
+  axios({
+    method: 'get',
+    url: url,
+    responseType: 'stream',
+  })
     .then(response => {
       feed2json.fromStream(response.data, url, (err, json) => {
         t.ok(!err, 'no error reading the RSS Feed')
@@ -52,13 +78,25 @@ test('axios streaming an RSS file', (t) => {
         t.ok(json, 'something appeared in the JSON')
         t.ok(typeof json === 'object', 'The JSON is an object as expected')
 
-        t.equal(json.version, "https://jsonfeed.org/version/1", 'JSONFeed version is correct')
-        t.equal(json.title, "Andrew Chilton", "Title is correct")
-        t.equal(json.home_page_url, "https://chilts.org", "Home Page URL is correct")
-        t.equal(json.description, "A blog about tech.", "Description is correct")
-        t.equal(json.author.name, "Andrew Chilton", "Author Name is correct")
+        t.equal(
+          json.version,
+          'https://jsonfeed.org/version/1',
+          'JSONFeed version is correct'
+        )
+        t.equal(json.title, 'Scripting News', 'Title is correct')
+        t.equal(
+          json.home_page_url,
+          'http://www.scripting.com/',
+          'Home Page URL is correct'
+        )
+        t.equal(
+          json.description,
+          'A weblog about scripting and stuff like that.',
+          'Description is correct'
+        )
+        t.equal(json.author.name, 'dave@userland.com', 'Author Name is correct')
 
-        t.equal(json.items.length, 2, "There are two items as expected.")
+        t.equal(json.items.length, 9, 'There are two items as expected.')
 
         t.end()
       })
@@ -66,7 +104,6 @@ test('axios streaming an RSS file', (t) => {
     .catch(err => {
       t.fail("Request shouldn't have failed")
     })
-  ;
 })
 
 // test('request stream an Atom file', (t) => {

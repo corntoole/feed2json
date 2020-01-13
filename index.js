@@ -13,14 +13,14 @@ function log(msg) {
 }
 
 function logThis(log, msg) {
-  if ( !log ) return
+  if (!log) return
   log(msg)
 }
 
 function once(fn) {
   var called = false
   return function(err, data) {
-    if ( called ) return
+    if (called) return
     called = true
     fn(err, data)
   }
@@ -28,10 +28,10 @@ function once(fn) {
 
 function fromStream(stream, url, opts, callback) {
   // check if there is no callback, it's probably the `opts` missing
-  if ( typeof callback === 'undefined' ) {
+  if (typeof callback === 'undefined') {
     callback = opts
     opts = {
-      log : log,
+      log: log,
     }
   }
 
@@ -41,14 +41,14 @@ function fromStream(stream, url, opts, callback) {
   // create the feedparser
   logThis(opts.log, 'feedparser.creating')
   var feedparser = new FeedParser({
-    normalize       : true,
-    addmeta         : false,
-    feedurl         : url,
-    resume_saxerror : true,
+    normalize: true,
+    addmeta: false,
+    feedurl: url,
+    resume_saxerror: true,
   })
 
   // check for request errors
-  stream.on('error', function (err) {
+  stream.on('error', function(err) {
     callback(err)
   })
 
@@ -70,13 +70,13 @@ function fromStream(stream, url, opts, callback) {
     // Going through fields in the same order as : https://jsonfeed.org/version/1
 
     // version (required, string)
-    data.version = "https://jsonfeed.org/version/1"
+    data.version = 'https://jsonfeed.org/version/1'
 
     // title (required, string)
     data.title = meta.title
 
     // home_page_url (optional)
-    if ( meta.link ) {
+    if (meta.link) {
       data.home_page_url = meta.link
     }
 
@@ -84,7 +84,7 @@ function fromStream(stream, url, opts, callback) {
     // an RSS or Atom feed.
 
     // description (optional, string)
-    if ( meta.description ) {
+    if (meta.description) {
       data.description = meta.description
     }
 
@@ -95,15 +95,15 @@ function fromStream(stream, url, opts, callback) {
     // icon (optional, string) - nothing in RSS or Atom can be used here
 
     // favicon (optional, string) - Atom might have this
-    if ( meta.favicon ) {
+    if (meta.favicon) {
       data.favicon = meta.favicon
     }
 
     // author{name,url,avatar} (optional, must include one if exists)
-    if ( meta.author ) {
+    if (meta.author) {
       // even in Atom feeds with Author Name, Email and URI, feedparser only gives `meta.author`
       data.author = {
-        name : meta.author,
+        name: meta.author,
       }
     }
 
@@ -115,52 +115,53 @@ function fromStream(stream, url, opts, callback) {
     data.items = []
   })
 
+  let logPost = once(function(post) {
+    logThis(opts.log, post)
+  })
+
   feedparser.on('data', function(post) {
     logThis(opts.log, ' - post = ' + post.guid)
-
+    // logPost(post)
     let item = {}
 
     // Going through fields in the same order as : https://jsonfeed.org/version/1
 
     // id (required, string) - use `guid`
-    if ( post.guid ) {
-      item.guid = post.guid
-    }
-    else {
+    if (post.guid) {
+      item.id = post.guid
+    } else {
       // What should we do if there is no `guid` since `id` is required?
     }
 
     // url (optional, string) - the permalink if you like, may be the same as `id`
-    if ( post.link ) {
+    if (post.link) {
       item.url = post.link
-    }
-    else {
+    } else {
       // What should we do if there is no `link` since we really should have a `url` here?
     }
 
     // external_url (optional, string) - ignore since we're adding a `url` anyway
 
     // title (optional, string)
-    if ( post.title ) {
+    if (post.title) {
       item.title = post.title
     }
 
     // content_html/content_text (optional, string) - one must be present
-    if ( post.description ) {
+    if (post.description) {
       item.content_html = post.description
     }
 
     // summary (optional, string)
-    if ( post.summary ) {
+    if (post.summary) {
       item.summary = post.summary
     }
 
     // image (optional, string)
-    if ( post.image ) {
-      if ( post.image.constructor === Object ) {
+    if (post.image) {
+      if (post.image.constructor === Object) {
         // skip for now
-      }
-      else {
+      } else {
         item.image = post.image
       }
     }
@@ -168,20 +169,27 @@ function fromStream(stream, url, opts, callback) {
     // banner_image (optional, string) - ???
 
     // date_published (optional, string)
-    if ( post.pubDate ) {
+    if (post.pubDate) {
       item.date_published = post.pubDate
     }
 
     // date_modified (optional, string) - ???
 
     // author (optional, object)
-    if ( post.author ) {
+    if (post.author) {
       item.author = {
-        name : post.author,
+        name: post.author,
       }
     }
 
     // tags (optional, string[])
+
+    // enclosure -> attachments
+    if (post.enclosures) {
+      item.attachments = post.enclosures.map(e => {
+        return { url: e.url, type: e.type, length: e.length }
+      })
+    }
 
     // finally, push this `item` onto `data.items`
     data.items.push(item)
