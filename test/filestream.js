@@ -28,7 +28,7 @@ test('read a small RSS file', (t) => {
 
     t.equal(json.version, "https://jsonfeed.org/version/1", 'JSONFeed version is correct')
     t.equal(json.title, "Andrew Chilton", "Title is correct")
-    t.equal(json.home_page_url, "https://chilts.org", "Home Page URL is correct")
+    t.equal(json.home_page_url, "https://chilts.org/", "Home Page URL is correct")
     t.equal(json.description, "A blog about tech.", "Description is correct")
     t.equal(json.author.name, "Andrew Chilton", "Author Name is correct")
 

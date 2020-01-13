@@ -12,7 +12,8 @@
     "string-to-stream": "^1.1.0"
   },
   "devDependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.19.1",
+    "nock": "^11.7.2",
     "request": "^2.81.0",
     "tape": "^4.7.0"
   },
