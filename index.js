@@ -115,16 +115,20 @@ function fromStream(stream, url, opts, callback) {
     data.items = []
   })
 
-  feedparser.on('data', function(post) {
-    logThis(opts.log, ' - post = ' + post.guid)
+	let logPost = once(function(post) {
+			logThis(opts.log, post)
+		})
 
+  feedparser.on('data', function(post) {
+		logThis(opts.log, ' - post = ' + post.guid)
+		// logPost(post)
     let item = {}
 
     // Going through fields in the same order as : https://jsonfeed.org/version/1
 
     // id (required, string) - use `guid`
     if ( post.guid ) {
-      item.guid = post.guid
+      item.id = post.guid
     }
     else {
       // What should we do if there is no `guid` since `id` is required?
@@ -181,7 +185,12 @@ function fromStream(stream, url, opts, callback) {
       }
     }
 
-    // tags (optional, string[])
+		// tags (optional, string[])
+
+		// enclosure -> attachments
+		if ( post.enclosures ) {
+			item.attachments = post.enclosures.map(e =>{ return {url: e.url, type: e.type, length: e.length}})
+		}
 
     // finally, push this `item` onto `data.items`
     data.items.push(item)
